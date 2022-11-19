@@ -26,13 +26,7 @@ class Scram(object):
 
         if os.path.isdir(path):
             self.repo = Repo(path)
-            print(
-                colored(f"Fetching updates for : ", "green"),
-                colored(
-                    f'{os.path.basename(path[:-1]):19} Diff : {self.repo.git.pull("origin", "master")}',
-                    "yellow\n",
-                ),
-            )
+            print(f'Fetching updates for : {os.path.basename(path[:-1]):19} Diff : {self.repo.git.pull("origin", "main")}')
         else:
             os.makedirs(path)
             self.repo = Repo.clone_from(repo, path, env={"GIT_SSH": user["ssh"]})
@@ -44,10 +38,7 @@ class Scram(object):
     def commit(self, branch: str = "main", message: str = "Auto commit"):
         has_changes = False
         for file in self.repo.untracked_files:
-            print(
-                colored(f"Adding untracked file : ", "blue"),
-                colored(f"{file} {os.path.basename(self.path[:-1]):19}", "yellow\n"),
-            )
+            print(f'Adding untracked file : {file} {os.path.basename(self.path[:-1])}\n')
             self.repo.git.add(file)
             has_changes = True
 
@@ -56,10 +47,7 @@ class Scram(object):
                 if file == "":
                     continue
 
-                print(
-                    colored(f"Adding modified file : ", "blue"),
-                    colored(f"{file} {os.path.basename(self.path[:-1])}", "yellow\n"),
-                )
+                print(f'Adding modified file : {file} {os.path.basename(self.path[:-1])}\n')
                 self.repo.git.add(file)
                 has_changes = True
 
@@ -82,7 +70,7 @@ class Scram(object):
             repository.repo.git.push('origin', 'main')
         output_queue.put(colored('Done', 'green'))
 
-    def main(args):
+    def main():
         process = configparser.ConfigParser()
         __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
         process.read(os.path.join(__location__, 'repos.ini'))
@@ -130,9 +118,8 @@ class Scram(object):
                     else:
                         print(req)
 
-        print(colored('\nCompleted all updates', 'green'))
+        print('\nCompleted all updates')
 
 if __name__ == "__main__":
-    run = Scram()
-    run.main
+    Scram.main()
 
