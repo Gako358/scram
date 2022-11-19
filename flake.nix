@@ -21,5 +21,18 @@
           ];
         };
       });
+      defaultPackage = forAllSystems (system:
+        pkgs.${system}.buildEnv {
+          name = "gitscram";
+          paths = with pkgs.${system}; [
+            python39Packages.colorama
+            python39Packages.GitPython
+            python39Packages.termcolor
+          ];
+        });
+      defaultApp = forAllSystems (system: {
+        type = "app";
+        program = defaultPackage.${system}/bin/gitscram;
+      });
     };
 }
