@@ -21,18 +21,21 @@
           ];
         };
       });
-      defaultPackage = forAllSystems (system:
-        pkgs.${system}.buildEnv {
-          name = "gitscram";
-          paths = with pkgs.${system}; [
-            python39Packages.colorama
-            python39Packages.GitPython
-            python39Packages.termcolor
-          ];
-        });
-      defaultApp = forAllSystems (system: {
-        type = "app";
-        program = defaultPackage.${system}/bin/gitscram;
-      });
+      packages.scramgit = pkgs.python39Packages.buildPythonPackage {
+        pname = "scramgit";
+        version = "0.1.0";
+        src = ./src;
+        propagatedBuildInputs = with pkgs.python39Packages; [
+          colorama
+          GitPython
+          termcolor
+        ];
+
+        meta = {
+          description = "A simple git wrapper to scramble your commits";
+          license = pkgs.lib.licenses.mit;
+          maintainers = with pkgs.lib.maintainers; [ merrinx ];
+        };
+      };
     };
 }
