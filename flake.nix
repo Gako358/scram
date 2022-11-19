@@ -17,6 +17,7 @@
           packages = with pkgs.${system}; [
             python39Packages.colorama
             python39Packages.GitPython
+            python39Packages.termcolor
           ];
         };
       });
