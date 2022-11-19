@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+ssh -i /home/merrinx/.ssh/id_rsa -oIdentitiesOnly=yes -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null "$@"
