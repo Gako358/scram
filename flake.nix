@@ -19,7 +19,7 @@
       scramgit = pkgs.python39Packages.buildPythonApplication {
         pname = "scramgit";
         version = "0.1.0";
-        src = ./src;
+        src = ./.;
         propagatedBuildInputs = with pkgs.python39Packages; [
           colorama
           GitPython
