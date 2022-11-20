@@ -42,10 +42,7 @@
         program = "${self.packages.${system}.scramgit}/bin/scramgit";
       };
 
-      defaultApp = {
-        type = "app";
-        program = "${self.apps.${system}.scramgit}/bin/scramgit";
-      };
+      apps.default = self.apps.${system}.scramgit;
 
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
