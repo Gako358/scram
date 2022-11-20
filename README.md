@@ -1,5 +1,5 @@
 # scram
-A "A simple git wrapper to help you keep your git history clean" 
+"A simple git wrapper to help you keep your git history clean" 
 Update local and remote git repositories easy
 
 ## Installation
