@@ -75,58 +75,114 @@ class Scram(object):
             repository.repo.git.push("origin", "main")
         output_queue.put("DONE")
 
+    def run():
+        process = configparser.ConfigParser()
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__))
+        )
+        process.read(os.path.join(__location__, "repos.ini"))
+        queues = []
+        num_processes = 0
+
+        for i, name in enumerate(process):
+            if name == "DEFAULT":
+                continue
+            iq = mp.Queue()
+            oq = mp.Queue()
+            queues.append((iq, oq))
+            mp.Process(
+                target=Scram.remote_repos,
+                args=(oq, iq, process.get(name, "repo"), process.get(name, "path")),
+            ).start()
+            num_processes += 1
+
+        done = 0
+        waiting_input = 0
+        keep = []
+
+        while done + waiting_input < num_processes:
+            for iq, oq in queues:
+                if not oq.empty():
+                    req = oq.get()
+                    if "INPUT" in req:
+                        waiting_input += 1
+                        keep.append((req, iq))
+                    elif "DONE" in req:
+                        done += 1
+                    else:
+                        print(req)
+
+        done = 0
+
+        # keep inputs until all processes are done
+        for req, iq in keep:
+            res = input(req.split(":")[1])
+            iq.put(res)
+
+        while done < waiting_input:
+            for iq, oq in queues:
+                if not oq.empty():
+                    req = oq.get()
+                    if "DONE" in req:
+                        done += 1
+                    else:
+                        print(req)
+
+        print("\nCompleted all updates")
+
 
 if __name__ == "__main__":
-    process = configparser.ConfigParser()
-    __location__ = os.path.realpath(
-        os.path.join(os.getcwd(), os.path.dirname(__file__))
-    )
-    process.read(os.path.join(__location__, "repos.ini"))
-    queues = []
-    num_processes = 0
-
-    for i, name in enumerate(process):
-        if name == "DEFAULT":
-            continue
-        iq = mp.Queue()
-        oq = mp.Queue()
-        queues.append((iq, oq))
-        mp.Process(
-            target=Scram.remote_repos,
-            args=(oq, iq, process.get(name, "repo"), process.get(name, "path")),
-        ).start()
-        num_processes += 1
-
-    done = 0
-    waiting_input = 0
-    keep = []
-
-    while done + waiting_input < num_processes:
-        for iq, oq in queues:
-            if not oq.empty():
-                req = oq.get()
-                if "INPUT" in req:
-                    waiting_input += 1
-                    keep.append((req, iq))
-                elif "DONE" in req:
-                    done += 1
-                else:
-                    print(req)
-
-    done = 0
-
-    # keep inputs until all processes are done
-    for req, iq in keep:
-        res = input(req.split(":")[1])
-        iq.put(res)
-
-    while done < waiting_input:
-        for iq, oq in queues:
-            if not oq.empty():
-                req = oq.get()
-                if "DONE" in req:
-                    done += 1
-                else:
-                    print(req)
-
-    print("\nCompleted all updates")
+    Scram.run()
+    # process = configparser.ConfigParser()
+    # __location__ = os.path.realpath(
+    #     os.path.join(os.getcwd(), os.path.dirname(__file__))
+    # )
+    # process.read(os.path.join(__location__, "repos.ini"))
+    # queues = []
+    # num_processes = 0
+    #
+    # for i, name in enumerate(process):
+    #     if name == "DEFAULT":
+    #         continue
+    #     iq = mp.Queue()
+    #     oq = mp.Queue()
+    #     queues.append((iq, oq))
+    #     mp.Process(
+    #         target=Scram.remote_repos,
+    #         args=(oq, iq, process.get(name, "repo"), process.get(name, "path")),
+    #     ).start()
+    #     num_processes += 1
+    #
+    # done = 0
+    # waiting_input = 0
+    # keep = []
+    #
+    # while done + waiting_input < num_processes:
+    #     for iq, oq in queues:
+    #         if not oq.empty():
+    #             req = oq.get()
+    #             if "INPUT" in req:
+    #                 waiting_input += 1
+    #                 keep.append((req, iq))
+    #             elif "DONE" in req:
+    #                 done += 1
+    #             else:
+    #                 print(req)
+    #
+    # done = 0
+    #
+    # # keep inputs until all processes are done
+    # for req, iq in keep:
+    #     res = input(req.split(":")[1])
+    #     iq.put(res)
+    #
+    # while done < waiting_input:
+    #     for iq, oq in queues:
+    #         if not oq.empty():
+    #             req = oq.get()
+    #             if "DONE" in req:
+    #                 done += 1
+    #             else:
+    #                 print(req)
+    #
+    # print("\nCompleted all updates")
