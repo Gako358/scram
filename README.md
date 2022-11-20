@@ -4,8 +4,10 @@ Update local and remote git repositories easy
 
 ## Installation
 
-*for nix users*
+*For nix users*
 run: `nix run`
+
+### Other systems
 
 src/static/repos.ini
 ```
