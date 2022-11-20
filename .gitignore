@@ -1,7 +1,6 @@
 *.pyc
 __pycache__
 .venv
-*.ini
 *.ssh
 .direnv
 .pre-commit-config.yaml
