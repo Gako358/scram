@@ -62,7 +62,7 @@ class Scram(object):
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__))
         )
-        user.read(os.path.join(__location__, "user.ini"))
+        user.read(os.path.join(__location__, "./static/user.ini"))
         repository = Scram(
             repo=remote_repo, user=dict(user.items("user_id")), path=path_repo
         )
@@ -80,7 +80,7 @@ class Scram(object):
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__))
         )
-        process.read(os.path.join(__location__, "repos.ini"))
+        process.read(os.path.join(__location__, "./static/repos.ini"))
         queues = []
         num_processes = 0
 

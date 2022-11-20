@@ -6,6 +6,9 @@ setup(
     description="A simple git wrapper",
     author="MerrinX",
     author_email="gako358@outlook.com",
+    package_data={
+        'static': ['repos.ini', 'user.ini'],
+    },
     entry_points={
         "console_scripts": [
             "scramgit = main:Scram.run",
