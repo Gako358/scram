@@ -22,10 +22,10 @@
         };
       });
       packages.${system}.scramgit = forAllSystems (system: {
-        default = pkgs.${system}.buildPythonApplication {
+        default = pkgs.${system}.buildPythonPackage rec {
           pname = "scramgit";
           version = "0.1.0";
-          src = ./.;
+          src = ./src;
           propagatedBuildInputs = with pkgs.${system}.python39Packages; [
             colorama
             GitPython
@@ -33,10 +33,9 @@
           ];
         };
       });
-
-      apps.${system}.default = {
+      apps.default = {
         type = "app";
-        program = "${self.scramgit.${system}.scramgit}/bin/scramgit";
+        program = "${self.packages.${system}.scramgit}/bin/scramgit";
       };
     };
 }
