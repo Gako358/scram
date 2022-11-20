@@ -4,6 +4,9 @@ Update local and remote git repositories easy
 
 ## Installation
 
+*for nix users*
+run: `nix run`
+
 src/static/repos.ini
 ```
 [nameofrepo]
