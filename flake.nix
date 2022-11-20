@@ -21,28 +21,22 @@
           ];
         };
       });
-      packages.scramgit = forAllSystems (system: {
-        default = pkgs.${system}.buildPythonPackage rec {
+      packages.${system}.scramgit = forAllSystems (system: {
+        default = pkgs.${system}.buildPythonApplication {
           pname = "scramgit";
           version = "0.1.0";
-          src = ./src;
-          propagatedBuildInputs = with pkgs.python39Packages; [
+          src = ./.;
+          propagatedBuildInputs = with pkgs.${system}.python39Packages; [
             colorama
             GitPython
             termcolor
           ];
-
-          meta = {
-            description = "A simple git wrapper to scramble your commits";
-            license = pkgs.lib.licenses.mit;
-            maintainers = with pkgs.lib.maintainers; [ merrinx ];
-          };
         };
       });
-      defaultPackage = self.packages.scramgit;
-      defaultApp = {
+
+      apps.${system}.default = {
         type = "app";
-        program = "${self.defaultPackage}/bin/scramgit";
+        program = "${self.scramgit.${system}.scramgit}/bin/scramgit";
       };
     };
 }
