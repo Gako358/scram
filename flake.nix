@@ -43,6 +43,7 @@
       };
 
       apps.default = self.apps.${system}.scramgit;
+      defaultPackage = self.packages.${system}.scramgit;
 
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
