@@ -15,6 +15,7 @@ node_modules
 
 # Nix
 result
+.direnv
 
 # Distribution / packaging
 .Python
