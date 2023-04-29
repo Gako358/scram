@@ -4,14 +4,12 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs =
-    { self
-    , nixpkgs
-    , flake-utils
-    ,
-    }:
-    flake-utils.lib.eachDefaultSystem (system:
-    let
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (system: let
       pkgs = import nixpkgs {
         inherit system;
       };
@@ -29,11 +27,10 @@
         meta = {
           description = "A simple git wrapper to help you keep your git history clean";
           license = pkgs.lib.licenses.mit;
-          maintainers = with pkgs.lib.maintainers; [ merrinx ];
+          maintainers = with pkgs.lib.maintainers; [merrinx];
         };
       };
-    in
-    {
+    in {
       packages.scramgit = scramgit;
       packages.default = self.packages.${system}.scramgit;
 
