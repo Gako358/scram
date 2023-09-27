@@ -22,14 +22,18 @@ class Scram(object):
 
         os.environ["GIT_SSH"] = user["ssh"]
 
-        if os.path.isdir(path):
-            self.repo = Repo(path)
+        if os.path.isdir(self.path) and os.listdir(self.path):
+            self.repo = Repo(self.path)
             print(
-                f'Fetching updates for : {os.path.basename(path[:-1]):19} Diff : {self.repo.git.pull("origin", "main")}\n'
+                f'Fetching updates for : {os.path.basename(self.path[:-1]):19} Diff : {self.repo.git.pull("origin", "main")}\n'
             )
         else:
-            os.makedirs(path)
-            self.repo = Repo.clone_from(repo, path, env={"GIT_SSH": user["ssh"]})
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+            print(
+                f"Cloning repository: {repo} to {self.path}"
+            )  # The added print statement
+            self.repo = Repo.clone_from(repo, self.path, env={"GIT_SSH": user["ssh"]})
             self.repo.config_writer().set_value("user", "name", user["name"]).release()
             self.repo.config_writer().set_value(
                 "user", "email", user["email"]
@@ -48,7 +52,6 @@ class Scram(object):
             for file in self.repo.git.diff(None, name_only=True).split("\n"):
                 if file == "":
                     continue
-
                 print(
                     f"Adding modified file : {file} {os.path.basename(self.path[:-1])}\n"
                 )
@@ -57,74 +60,71 @@ class Scram(object):
 
         return has_changes
 
-    def remote_repos(output_queue, input_queue, remote_repo, path_repo):
-        user = configparser.ConfigParser()
-        __location__ = os.path.realpath(
-            os.path.join(os.getcwd(), os.path.dirname(__file__))
-        )
-        user.read(os.path.join(__location__, "./static/user.ini"))
-        repository = Scram(
-            repo=remote_repo, user=dict(user.items("user_id")), path=path_repo
-        )
-        if repository.commit() is True:
+    @staticmethod
+    def remote_repos(output_queue, input_queue, remote_repo, path_repo, user_config):
+        repository = Scram(repo=remote_repo, user=user_config, path=path_repo)
+        if repository.commit():
             output_queue.put(
-                f"\nINPUT: Write commit msg for , {os.path.basename(path_repo[:-1])} = "
+                f"\nINPUT: Write commit msg for , {os.path.basename(path_repo.rstrip(os.sep))} = "
             )
             result = input_queue.get()
             repository.repo.git.commit("-m", result)
             repository.repo.git.push("origin", "main")
         output_queue.put("DONE")
 
+    @staticmethod
     def run():
         process = configparser.ConfigParser()
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__))
         )
         process.read(os.path.join(__location__, "./static/repos.ini"))
-        queues = []
-        num_processes = 0
 
+        # Read user config here and pass it to the remote_repos
+        user = configparser.ConfigParser()
+        user.read(os.path.join(__location__, "./static/user.ini"))
+        user_config = dict(user.items("user_id"))
+
+        processes = []
+        input_queues = []
+        output_queues = []
+
+        # Start processes for each repo
         for i, name in enumerate(process):
             if name == "DEFAULT":
                 continue
             iq = mp.Queue()
             oq = mp.Queue()
-            queues.append((iq, oq))
-            mp.Process(
+            input_queues.append(iq)
+            output_queues.append(oq)
+
+            p = mp.Process(
                 target=Scram.remote_repos,
-                args=(oq, iq, process.get(name, "repo"), process.get(name, "path")),
-            ).start()
-            num_processes += 1
+                args=(
+                    oq,
+                    iq,
+                    process.get(name, "repo"),
+                    process.get(name, "path"),
+                    user_config,
+                ),
+            )
+            p.start()
+            processes.append(p)
 
-        done = 0
-        waiting_input = 0
-        keep = []
-
-        while done + waiting_input < num_processes:
-            for iq, oq in queues:
-                if not oq.empty():
+        while processes:
+            # Monitor output queues
+            for i, oq in enumerate(output_queues):
+                while not oq.empty():
                     req = oq.get()
                     if "INPUT" in req:
-                        waiting_input += 1
-                        keep.append((req, iq))
+                        res = input(req.split(":")[1])
+                        input_queues[i].put(res)
                     elif "DONE" in req:
-                        done += 1
-                    else:
-                        print(req)
-
-        done = 0
-
-        # keep inputs until all processes are done
-        for req, iq in keep:
-            res = input(req.split(":")[1])
-            iq.put(res)
-
-        while done < waiting_input:
-            for iq, oq in queues:
-                if not oq.empty():
-                    req = oq.get()
-                    if "DONE" in req:
-                        done += 1
+                        processes[i].join()  # Make sure process has finished
+                        processes.pop(i)
+                        input_queues.pop(i)
+                        output_queues.pop(i)
+                        break
                     else:
                         print(req)
 
