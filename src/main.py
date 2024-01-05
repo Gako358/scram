@@ -61,14 +61,11 @@ class Scram(object):
         return has_changes
 
     @staticmethod
-    def remote_repos(output_queue, input_queue, remote_repo, path_repo, user_config):
+    def remote_repos(output_queue, remote_repo, path_repo, user_config):
         repository = Scram(repo=remote_repo, user=user_config, path=path_repo)
         if repository.commit():
-            output_queue.put(
-                f"\nINPUT: Write commit msg for , {os.path.basename(path_repo.rstrip(os.sep))} = "
-            )
-            result = input_queue.get()
-            repository.repo.git.commit("-m", result)
+            auto_commit_message = "Automated commit"
+            repository.repo.git.commit("-m", auto_commit_message)
             repository.repo.git.push("origin", "main")
         output_queue.put("DONE")
 
@@ -86,23 +83,19 @@ class Scram(object):
         user_config = dict(user.items("user_id"))
 
         processes = []
-        input_queues = []
         output_queues = []
 
         # Start processes for each repo
         for i, name in enumerate(process):
             if name == "DEFAULT":
                 continue
-            iq = mp.Queue()
             oq = mp.Queue()
-            input_queues.append(iq)
             output_queues.append(oq)
 
             p = mp.Process(
                 target=Scram.remote_repos,
                 args=(
                     oq,
-                    iq,
                     process.get(name, "repo"),
                     process.get(name, "path"),
                     user_config,
@@ -116,13 +109,9 @@ class Scram(object):
             for i, oq in enumerate(output_queues):
                 while not oq.empty():
                     req = oq.get()
-                    if "INPUT" in req:
-                        res = input(req.split(":")[1])
-                        input_queues[i].put(res)
-                    elif "DONE" in req:
+                    if "DONE" in req:
                         processes[i].join()  # Make sure process has finished
                         processes.pop(i)
-                        input_queues.pop(i)
                         output_queues.pop(i)
                         break
                     else:

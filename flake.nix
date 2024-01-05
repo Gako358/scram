@@ -44,6 +44,7 @@
 
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
+          nodePackages.pyright
           python39Packages.colorama
           python39Packages.GitPython
           python39Packages.termcolor
