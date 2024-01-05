@@ -64,7 +64,7 @@ class Scram(object):
     def remote_repos(output_queue, remote_repo, path_repo, user_config):
         repository = Scram(repo=remote_repo, user=user_config, path=path_repo)
         if repository.commit():
-            auto_commit_message = "Automated commit"
+            auto_commit_message = "Automatic Update"
             repository.repo.git.commit("-m", auto_commit_message)
             repository.repo.git.push("origin", "main")
         output_queue.put("DONE")
