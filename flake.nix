@@ -16,11 +16,11 @@
         inherit system;
       };
 
-      scramgit = pkgs.python39Packages.buildPythonApplication {
+      scramgit = pkgs.python312Packages.buildPythonApplication {
         pname = "scramgit";
         version = "0.1.0";
         src = ./.;
-        propagatedBuildInputs = with pkgs.python39Packages; [
+        propagatedBuildInputs = with pkgs.python312Packages; [
           colorama
           GitPython
           termcolor
